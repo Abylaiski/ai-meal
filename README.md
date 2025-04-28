@@ -15,8 +15,8 @@ MealAI - это телеграм-бот, который определяет б�
 1. Клонировать репозиторий и установить зависимости:
 
 ```bash
-git clone https://github.com/yourrepo/mealai.git
-cd mealai
+git clone https://github.com/Abylaiski/ai-meal.git
+cd ai-meal
 python -m venv .venv
 source .venv/bin/activate  # или .venv\Scripts\activate на Windows
 pip install -r requirements.txt
@@ -25,8 +25,8 @@ pip install -r requirements.txt
 2. Создать файл `.env` и добавить:
 
 ```env
-API_TOKEN=ваш_токен_бота
-MISTRAL_API_KEY=ваш_ключ_Mistral
+API_TOKEN=токен_телеграмбота
+MISTRAL_API_KEY=ключ_Mistral
 ```
 
 3. Запуск бота:
