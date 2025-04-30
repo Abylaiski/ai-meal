@@ -1,20 +1,20 @@
 import asyncio
+import io
 import logging
 import re
-from typing import Sized
-from transformers import BlipProcessor, BlipForConditionalGeneration
-from PIL import Image
-import io
 
 import aiohttp
 import aiosqlite
+from PIL import Image
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
-from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import Message
 from pydantic_settings import BaseSettings
+from transformers import BlipProcessor, BlipForConditionalGeneration
+
 
 # --------------------- Конфигурация ---------------------
 class Settings(BaseSettings):
@@ -125,10 +125,14 @@ class FeedbackState(StatesGroup):
 
 # --------------------- Сервисы ---------------------
 async def generate_caption(image_bytes: bytes) -> str:
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    inputs = processor(image, return_tensors="pt")
-    output = model.generate(**inputs)
-    return processor.decode(output[0], skip_special_tokens=True)
+    image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+    # оборачиваем в список и включаем padding, чтобы все батчи были одинаковой формы
+    inputs = processor([image], return_tensors="pt", padding=True)
+    output_ids = model.generate(**inputs)
+    # первый (и единственный) элемент батча
+    caption = processor.decode(output_ids[0], skip_special_tokens=True)
+    return caption
+
 
 async def call_mistral(prompt: str) -> str:
     # 1) Сначала пытаемся взять ответ из кеша
@@ -271,6 +275,9 @@ async def handle_photo(msg: Message, state: FSMContext):
         await msg.reply("Это правильное название? Ответьте «Да» или введите корректное.")
         await state.update_data(blip_desc=desc)
         await state.set_state(FeedbackState.waiting_confirmation)
+        return None
+    return None
+
 
 @dp.message(FeedbackState.waiting_confirmation)
 async def feedback_handler(msg: Message, state: FSMContext):
